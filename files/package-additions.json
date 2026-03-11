@@ -1,0 +1,16 @@
+// ADD/MERGE these into your existing package.json
+// Don't replace the whole file — just update the "scripts" and add "build" section
+
+{
+  "scripts": {
+    "start": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "build:renderer": "vite build",
+    "dist:win": "electron-builder --win --config electron-builder.json",
+    "dist:mac": "electron-builder --mac --config electron-builder.json",
+    "dist:linux": "electron-builder --linux --config electron-builder.json",
+    "dist:all": "electron-builder --win --mac --linux --config electron-builder.json"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.13.3"
+  }
+}

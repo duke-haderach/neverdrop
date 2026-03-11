@@ -1,0 +1,35 @@
+## Dependencies
+node_modules/
+
+## Build output — never commit these, they go as Release assets
+dist/
+dist-electron/
+out/
+
+## Electron builder cache
+.cache/
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Environment / secrets — NEVER commit
+.env
+.env.*
+*.pem
+*.key
+
+## SQLite database (user data, stays local)
+*.db
+*.sqlite
+
+## Logs
+*.log
+npm-debug.log*
+
+## VS Code
+.vscode/
+
+## Temp
+*.tmp
+*.temp

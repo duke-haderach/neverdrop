@@ -1,0 +1,49 @@
+{
+  "appId": "com.neverdrop.app",
+  "productName": "NeverDrop",
+  "copyright": "Copyright © 2026 NeverDrop",
+  "directories": {
+    "output": "dist-electron",
+    "buildResources": "build"
+  },
+  "files": [
+    "dist/**/*",
+    "src/main/**/*",
+    "node_modules/**/*",
+    "package.json"
+  ],
+  "extraMetadata": {
+    "main": "src/main/index.js"
+  },
+  "win": {
+    "target": [
+      { "target": "nsis", "arch": ["x64"] }
+    ],
+    "icon": "build/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "NeverDrop"
+  },
+  "mac": {
+    "target": [
+      { "target": "dmg", "arch": ["x64", "arm64"] }
+    ],
+    "icon": "build/icon.icns",
+    "category": "public.app-category.productivity"
+  },
+  "linux": {
+    "target": [
+      { "target": "AppImage", "arch": ["x64"] }
+    ],
+    "icon": "build/icon.png",
+    "category": "Utility"
+  },
+  "publish": {
+    "provider": "github",
+    "releaseType": "release"
+  }
+}

@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg:         #0a0a0f;
+  --surface:    #13131a;
+  --surface2:   #1c1c28;
+  --surface3:   #24243a;
+  --border:     #2a2a3d;
+  --border2:    #383855;
+  --accent:     #7c6af7;
+  --accent2:    #e05af5;
+  --accent-dim: rgba(124,106,247,0.15);
+  --success:    #3dd68c;
+  --warn:       #f5a623;
+  --danger:     #f54848;
+  --info:       #4ea8de;
+  --text:       #e8e8f0;
+  --text2:      #a0a0c0;
+  --muted:      #6b6b8a;
+  --mono:       'DM Mono', monospace;
+  --sans:       'Sora', sans-serif;
+  --radius:     10px;
+  --radius-lg:  14px;
+  --transition: 0.15s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* Focus */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+button { cursor: pointer; font-family: var(--sans); }
+input, textarea, select { font-family: var(--sans); }
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  50%       { opacity: 1;   transform: translateY(-3px); }
+}
