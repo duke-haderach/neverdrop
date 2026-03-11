@@ -21,6 +21,9 @@
 | 🐧 Linux | [NeverDrop.AppImage](https://github.com/duke-haderach/neverdrop/releases/latest) |
 
 ---
+NeverDrop-Setup-1.0.0.exe  — Windows installer
+NeverDrop-1.0.0.dmg  — Mac installer
+NeverDrop-1.0.0.AppImage  — Linux
 
 ## What is NeverDrop?
 
