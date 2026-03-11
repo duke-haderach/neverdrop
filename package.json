@@ -36,11 +36,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.ico"
@@ -55,7 +59,10 @@
       "shortcutName": "NeverDrop"
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "category": "public.app-category.productivity",
       "icon": "assets/icon.icns",
       "hardenedRuntime": true,
@@ -64,7 +71,10 @@
       "entitlementsInherit": "assets/entitlements.mac.plist"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "icon": "assets/icon.png",
       "category": "Utility"
     },
@@ -78,7 +88,9 @@
     "@google/generative-ai": "^0.15.0",
     "better-sqlite3": "^9.6.0",
     "keytar": "^7.9.0",
-    "openai": "^4.47.0"
+    "openai": "^4.47.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
