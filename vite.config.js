@@ -5,17 +5,9 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   root: 'src/renderer',
-  base: './',
+  base: './',   // CRITICAL for Electron — use relative paths not absolute
   build: {
-    outDir: path.resolve(__dirname, 'dist'),
+    outDir: path.resolve(__dirname, 'dist-renderer'),
     emptyOutDir: true,
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src/renderer'),
-    },
-  },
-  server: {
-    port: 5173,
   },
 });
