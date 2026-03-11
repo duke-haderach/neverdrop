@@ -25,6 +25,17 @@ NeverDrop-Setup-1.0.0.exe  — Windows installer
 NeverDrop-1.0.0.dmg  — Mac installer
 NeverDrop-1.0.0.AppImage  — Linux
 
+## Windows Security Warning
+
+When installing on Windows you may see a SmartScreen warning 
+saying "Unknown Publisher". This is normal for open source apps 
+without an expensive code signing certificate.
+
+To install: click **More info** → **Run anyway**
+
+Your API keys are stored in Windows Credential Manager and never 
+leave your machine.
+
 ## What is NeverDrop?
 
 Configure multiple LLM providers once. Chat normally. When one hits its quota or runs out of credits, NeverDrop detects it instantly and lets you **port your entire conversation** to another provider — the new model picks up exactly where the last one left off, with full context.
