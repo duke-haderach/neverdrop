@@ -36,8 +36,6 @@ export default function ProviderModal({ provider, onSave, onClose, showToast }) 
   const [model, setModel]           = useState('');
   const [adapter, setAdapter]       = useState('openai');
   const [apiKey, setApiKey]         = useState('');
-  const [maxTokens, setMaxTokens]   = useState(2048);
-  const [temp, setTemp]             = useState(0.7);
   const [notes, setNotes]           = useState('');
   const [saving, setSaving]         = useState(false);
   const [showKey, setShowKey]       = useState(false);
@@ -48,8 +46,6 @@ export default function ProviderModal({ provider, onSave, onClose, showToast }) 
       setBaseUrl(provider.base_url);
       setModel(provider.model);
       setAdapter(provider.adapter || 'openai');
-      setMaxTokens(provider.max_tokens || 2048);
-      setTemp(provider.temperature != null ? provider.temperature : 0.7);
       setNotes(provider.notes || '');
       // Load existing key hint
       window.api.keys.get(provider.id).then(k => { if (k) setApiKey('•'.repeat(20)); });
@@ -81,8 +77,8 @@ export default function ProviderModal({ provider, onSave, onClose, showToast }) 
           model: model.trim(),
           adapter,
           quota_daily: provider.quota_daily || 0,
-          max_tokens: parseInt(maxTokens) || 2048,
-          temperature: parseFloat(temp),
+          max_tokens: provider.max_tokens || 2048,
+          temperature: provider.temperature != null ? provider.temperature : 0.7,
           notes: notes.trim(),
           enabled: 1,
           reset_at: provider.reset_at || null,
@@ -94,8 +90,8 @@ export default function ProviderModal({ provider, onSave, onClose, showToast }) 
           model: model.trim(),
           adapter,
           quota_daily: 0,
-          max_tokens: parseInt(maxTokens) || 2048,
-          temperature: parseFloat(temp),
+          max_tokens: 2048,
+          temperature: 0.7,
           notes: notes.trim(),
         });
       }
@@ -202,29 +198,6 @@ export default function ProviderModal({ provider, onSave, onClose, showToast }) 
           <span className={styles.hint}>🔒 Stored in your OS keychain — never sent anywhere except directly to the provider API</span>
         </div>
 
-        <div className={styles.row}>
-          <div className={styles.formGroup}>
-            <label>Max Tokens</label>
-            <input
-              type="number"
-              value={maxTokens}
-              onChange={e => setMaxTokens(e.target.value)}
-              min={256}
-              max={128000}
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Temperature</label>
-            <input
-              type="number"
-              value={temp}
-              onChange={e => setTemp(e.target.value)}
-              min={0}
-              max={2}
-              step={0.1}
-            />
-          </div>
-        </div>
 
         <div className={styles.formGroup}>
           <label>Notes (optional)</label>

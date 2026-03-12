@@ -138,6 +138,21 @@ async function chatOpenAI({ provider, apiKey, messages }) {
     }),
   });
 
+  // Debug: log all rate limit headers received
+  const allHeaders = {};
+  res.headers.forEach((value, key) => {
+    if (key.toLowerCase().includes('rate') || key.toLowerCase().includes('limit') ||
+        key.toLowerCase().includes('remaining') || key.toLowerCase().includes('trial') ||
+        key.toLowerCase().includes('retry') || key.toLowerCase().includes('reset')) {
+      allHeaders[key] = value;
+    }
+  });
+  if (Object.keys(allHeaders).length > 0) {
+    console.log(`[NeverDrop] Rate limit headers from ${provider.base_url}:`, allHeaders);
+  } else {
+    console.log(`[NeverDrop] No rate limit headers from ${provider.base_url}`);
+  }
+
   const quotaInfo = parseRateLimitHeaders(res.headers);
 
   if (!res.ok) {
@@ -174,6 +189,21 @@ async function chatAnthropic({ provider, apiKey, messages }) {
       messages:   conversation,
     }),
   });
+
+  // Debug: log all rate limit headers received
+  const allHeaders = {};
+  res.headers.forEach((value, key) => {
+    if (key.toLowerCase().includes('rate') || key.toLowerCase().includes('limit') ||
+        key.toLowerCase().includes('remaining') || key.toLowerCase().includes('trial') ||
+        key.toLowerCase().includes('retry') || key.toLowerCase().includes('reset')) {
+      allHeaders[key] = value;
+    }
+  });
+  if (Object.keys(allHeaders).length > 0) {
+    console.log(`[NeverDrop] Rate limit headers from ${provider.base_url}:`, allHeaders);
+  } else {
+    console.log(`[NeverDrop] No rate limit headers from ${provider.base_url}`);
+  }
 
   const quotaInfo = parseRateLimitHeaders(res.headers);
 

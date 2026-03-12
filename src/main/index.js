@@ -99,8 +99,13 @@ ipcMain.handle('llm:chat', async (_, { providerId, messages, stream }) => {
   const apiKey = await keystore.getKey(providerId);
   if (!apiKey) throw new Error('No API key configured for this provider');
 
+  // Inject current date so models don't use stale training data dates
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const dateInjection = { role: 'system', content: `Today's date is ${today}. Always use this as the current date.` };
+  const messagesWithDate = [dateInjection, ...messages.filter(m => m.role !== 'system' || !m.content.includes("Today's date")), ];
+
   try {
-    const { reply, quotaInfo } = await llmRouter.chat({ provider, apiKey, messages });
+    const { reply, quotaInfo } = await llmRouter.chat({ provider, apiKey, messages: messagesWithDate });
 
     // Update quota from response headers (auto-detected limits)
     if (quotaInfo) {
