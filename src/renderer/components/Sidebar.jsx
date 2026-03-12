@@ -111,7 +111,12 @@ export default function Sidebar({
                   {p.quota_daily > 0 && (
                     <div className={styles.quotaWrap}>
                       <div className={styles.quotaLabels}>
-                        <span>{isExhausted ? 'Exhausted' : `${p.quota_daily - p.used_today} left`}</span>
+                        <span>{isExhausted
+                          ? p.reset_at
+                            ? `Resets ${new Date(p.reset_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
+                            : 'Exhausted'
+                          : `${p.quota_daily - p.used_today} left`}
+                        </span>
                         <span>{p.used_today}/{p.quota_daily}</span>
                       </div>
                       <div className={styles.quotaBar}>
@@ -124,7 +129,7 @@ export default function Sidebar({
                   )}
                   {p.quota_daily === 0 && (
                     <div className={styles.quotaLabels}>
-                      <span style={{color:'var(--muted)',fontSize:'11px'}}>Unlimited / manual tracking</span>
+                      <span style={{color:'var(--muted)',fontSize:'11px'}}>Limits auto-detected on first use</span>
                     </div>
                   )}
                 </div>

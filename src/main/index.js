@@ -34,7 +34,20 @@ function createWindow() {
   mainWindow.on('closed', () => { mainWindow = null; });
 }
 
+// Auto-reset providers whose reset_at time has passed
+function autoResetExpiredProviders() {
+  const providers = db.getProviders();
+  const now = new Date();
+  providers.forEach(p => {
+    if (p.reset_at && new Date(p.reset_at) < now) {
+      db.resetUsage(p.id);
+      console.log(`[NeverDrop] Auto-reset provider ${p.name} (reset_at expired)`);
+    }
+  });
+}
+
 app.whenReady().then(() => {
+  autoResetExpiredProviders();
   createWindow();
   app.on('activate', () => { if (!mainWindow) createWindow(); });
 });
@@ -87,8 +100,15 @@ ipcMain.handle('llm:chat', async (_, { providerId, messages, stream }) => {
   if (!apiKey) throw new Error('No API key configured for this provider');
 
   try {
-    const reply = await llmRouter.chat({ provider, apiKey, messages });
-    db.incrementUsage(providerId);
+    const { reply, quotaInfo } = await llmRouter.chat({ provider, apiKey, messages });
+
+    // Update quota from response headers (auto-detected limits)
+    if (quotaInfo) {
+      db.updateQuotaFromHeaders(providerId, quotaInfo);
+    } else {
+      db.incrementUsage(providerId);
+    }
+
     const updated = db.getProvider(providerId);
     return { reply, provider: updated };
   } catch (err) {

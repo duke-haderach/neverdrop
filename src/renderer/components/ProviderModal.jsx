@@ -14,7 +14,7 @@ const PRESETS = [
   { label: 'Groq (FREE)',          base_url: 'https://api.groq.com/openai/v1',              adapter: 'openai',    placeholder: 'llama-3.3-70b-versatile',                     tier: 'free',    signup: 'https://console.groq.com' },
   { label: 'DeepSeek (FREE)',      base_url: 'https://api.deepseek.com/v1',                 adapter: 'openai',    placeholder: 'deepseek-chat',                               tier: 'free',    signup: 'https://platform.deepseek.com' },
   { label: 'Mistral AI (FREE)',    base_url: 'https://api.mistral.ai/v1',                   adapter: 'openai',    placeholder: 'mistral-small-latest',                        tier: 'free',    signup: 'https://console.mistral.ai' },
-  { label: 'Cohere (FREE)',        base_url: 'https://api.cohere.com/v2',                   adapter: 'openai',    placeholder: 'command-r-plus-08-2024',                      tier: 'free',    signup: 'https://dashboard.cohere.com' },
+  { label: 'Cohere (FREE)',        base_url: 'https://api.cohere.com/compatibility/v1',                   adapter: 'openai',    placeholder: 'command-r-plus-08-2024',                      tier: 'free',    signup: 'https://dashboard.cohere.com' },
   { label: 'Cerebras (FREE)',      base_url: 'https://api.cerebras.ai/v1',                  adapter: 'openai',    placeholder: 'llama-3.3-70b',                               tier: 'free',    signup: 'https://cloud.cerebras.ai' },
   { label: 'Perplexity',           base_url: 'https://api.perplexity.ai',                   adapter: 'openai',    placeholder: 'llama-3.1-sonar-small-128k-online',           tier: 'paid',    signup: 'https://www.perplexity.ai/settings/api' },
   { label: 'Together AI',          base_url: 'https://api.together.xyz/v1',                 adapter: 'openai',    placeholder: 'meta-llama/Llama-3-8b-chat-hf',               tier: 'paid',    signup: 'https://api.together.ai' },
@@ -36,7 +36,6 @@ export default function ProviderModal({ provider, onSave, onClose, showToast }) 
   const [model, setModel]           = useState('');
   const [adapter, setAdapter]       = useState('openai');
   const [apiKey, setApiKey]         = useState('');
-  const [quotaDaily, setQuotaDaily] = useState(0);
   const [maxTokens, setMaxTokens]   = useState(2048);
   const [temp, setTemp]             = useState(0.7);
   const [notes, setNotes]           = useState('');
@@ -49,7 +48,6 @@ export default function ProviderModal({ provider, onSave, onClose, showToast }) 
       setBaseUrl(provider.base_url);
       setModel(provider.model);
       setAdapter(provider.adapter || 'openai');
-      setQuotaDaily(provider.quota_daily || 0);
       setMaxTokens(provider.max_tokens || 2048);
       setTemp(provider.temperature != null ? provider.temperature : 0.7);
       setNotes(provider.notes || '');
@@ -82,7 +80,7 @@ export default function ProviderModal({ provider, onSave, onClose, showToast }) 
           base_url: baseUrl.trim(),
           model: model.trim(),
           adapter,
-          quota_daily: parseInt(quotaDaily) || 0,
+          quota_daily: provider.quota_daily || 0,
           max_tokens: parseInt(maxTokens) || 2048,
           temperature: parseFloat(temp),
           notes: notes.trim(),
@@ -95,7 +93,7 @@ export default function ProviderModal({ provider, onSave, onClose, showToast }) 
           base_url: baseUrl.trim(),
           model: model.trim(),
           adapter,
-          quota_daily: parseInt(quotaDaily) || 0,
+          quota_daily: 0,
           max_tokens: parseInt(maxTokens) || 2048,
           temperature: parseFloat(temp),
           notes: notes.trim(),
@@ -205,17 +203,6 @@ export default function ProviderModal({ provider, onSave, onClose, showToast }) 
         </div>
 
         <div className={styles.row}>
-          <div className={styles.formGroup}>
-            <label>Daily Quota (0 = unlimited)</label>
-            <input
-              type="number"
-              value={quotaDaily}
-              onChange={e => setQuotaDaily(e.target.value)}
-              min={0}
-              placeholder="50"
-            />
-            <span className={styles.hint}>Auto-disables when reached</span>
-          </div>
           <div className={styles.formGroup}>
             <label>Max Tokens</label>
             <input

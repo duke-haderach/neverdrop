@@ -122,6 +122,43 @@ const markExhausted = (id) => {
   `).run(id);
 };
 
+const updateQuotaFromHeaders = (id, quotaInfo) => {
+  if (!quotaInfo) return;
+
+  const p = getProvider(id);
+  if (!p) return;
+
+  const { limit, remaining, resetAt } = quotaInfo;
+
+  // Auto-set quota_daily if not manually configured or if we learned a better value
+  const newQuota = limit || p.quota_daily;
+  const newUsed  = limit != null && remaining != null ? limit - remaining : p.used_today;
+
+  db.prepare(`
+    UPDATE providers SET
+      quota_daily = @quota_daily,
+      used_today  = @used_today,
+      reset_at    = COALESCE(@reset_at, reset_at),
+      updated_at  = datetime('now')
+    WHERE id = @id
+  `).run({
+    id,
+    quota_daily: newQuota,
+    used_today:  newUsed,
+    reset_at:    resetAt || null,
+  });
+
+  // Auto-exhaust if remaining hits 0
+  if (remaining === 0) {
+    db.prepare(`UPDATE providers SET exhausted = 1, enabled = 0 WHERE id = ?`).run(id);
+  }
+
+  // Auto-reset if reset_at is in the past
+  if (resetAt && new Date(resetAt) < new Date()) {
+    db.prepare(`UPDATE providers SET used_today = 0, exhausted = 0, enabled = 1, reset_at = NULL WHERE id = ?`).run(id);
+  }
+};
+
 const resetUsage = (id) => {
   db.prepare(`
     UPDATE providers SET used_today = 0, exhausted = 0, enabled = 1, updated_at = datetime('now')
@@ -200,7 +237,7 @@ function detectAdapter(baseUrl) {
 
 module.exports = {
   getProviders, getProvider, addProvider, updateProvider, deleteProvider,
-  incrementUsage, markExhausted, resetUsage,
+  incrementUsage, markExhausted, resetUsage, updateQuotaFromHeaders,
   getConversations, getConversation, createConversation, deleteConversation,
   renameConversation,
   getMessages, addMessage,
