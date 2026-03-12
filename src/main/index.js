@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, shell, nativeTheme } = require('electron');
 const path = require('path');
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+const { autoUpdater } = require('electron-updater');
 
 // ── Window ──────────────────────────────────────────────────────────────────
 let mainWindow;
@@ -50,6 +51,26 @@ app.whenReady().then(() => {
   autoResetExpiredProviders();
   createWindow();
   app.on('activate', () => { if (!mainWindow) createWindow(); });
+
+  // ── Auto-updater ──────────────────────────────────────────────────────────
+  if (!isDev) {
+    autoUpdater.checkForUpdates();
+
+    // Check again every 4 hours
+    setInterval(() => autoUpdater.checkForUpdates(), 4 * 60 * 60 * 1000);
+
+    autoUpdater.on('update-available', (info) => {
+      mainWindow?.webContents.send('update:available', { version: info.version });
+    });
+
+    autoUpdater.on('update-downloaded', (info) => {
+      mainWindow?.webContents.send('update:downloaded', { version: info.version });
+    });
+
+    autoUpdater.on('error', (err) => {
+      console.error('[NeverDrop] Auto-updater error:', err.message);
+    });
+  }
 });
 
 app.on('window-all-closed', () => {
@@ -90,6 +111,7 @@ ipcMain.handle('conversations:rename', (_, id, title) => db.renameConversation(i
 
 // Messages
 ipcMain.handle('messages:list', (_, conversationId) => db.getMessages(conversationId));
+ipcMain.handle('updater:restart', () => { autoUpdater.quitAndInstall(); });
 ipcMain.handle('messages:add', (_, msg) => db.addMessage(msg));
 
 // LLM

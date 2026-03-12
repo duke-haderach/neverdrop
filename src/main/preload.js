@@ -34,7 +34,13 @@ contextBridge.exposeInMainWorld('api', {
   },
   // Usage
   usage: {
-    reset:     (id) => ipcRenderer.invoke('usage:reset', id),
-    resetAll: ()   => ipcRenderer.invoke('usage:reset-all'),
+    reset:  (id)         => ipcRenderer.invoke('usage:reset', id),
+    resetAll: ()         => ipcRenderer.invoke('usage:resetAll'),
+  },
+  // Auto-updater
+  updater: {
+    onUpdateAvailable: (cb) => ipcRenderer.on('update:available', (_, info) => cb(info)),
+    onUpdateDownloaded: (cb) => ipcRenderer.on('update:downloaded', (_, info) => cb(info)),
+    restartAndInstall: () => ipcRenderer.invoke('updater:restart'),
   },
 });

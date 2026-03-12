@@ -16,8 +16,19 @@ export default function App() {
   const [portState, setPortState]               = useState(null); // { triggered: 'auto'|'manual', fromId }
   const [toast, setToast]                       = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [updateInfo, setUpdateInfo]             = useState(null); // { version, ready }
 
   // ── Load initial data ──
+  // ── Auto-update listeners ──────────────────────────────────────────────────
+  useEffect(() => {
+    window.api.updater.onUpdateAvailable(info => {
+      setUpdateInfo({ version: info.version, ready: false });
+    });
+    window.api.updater.onUpdateDownloaded(info => {
+      setUpdateInfo({ version: info.version, ready: true });
+    });
+  }, []);
+
   useEffect(() => {
     loadProviders();
     loadConversations();
