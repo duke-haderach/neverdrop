@@ -11,7 +11,7 @@
  *
  * Header mapping by provider:
  *   Groq:      x-ratelimit-limit-requests, x-ratelimit-remaining-requests, x-ratelimit-reset-requests
- *   Mistral:   x-ratelimit-limit, x-ratelimit-remaining, x-ratelimit-reset (epoch seconds)
+ *   Mistral:   x-ratelimit-limit-req-minute, x-ratelimit-remaining-req-minute (per minute)
  *   Cohere:    x-trial-endpoint-call-limit, x-trial-endpoint-call-remaining
  *   Cerebras:  x-ratelimit-limit-requests, x-ratelimit-remaining-requests
  *   OpenAI:    x-ratelimit-limit-requests, x-ratelimit-remaining-requests, x-ratelimit-reset-requests
@@ -19,78 +19,95 @@
  */
 
 /**
- * Parse rate limit info from response headers.
- * Returns { limit, remaining, resetAt } or null if no headers found.
+ * Dynamically parse rate limit info from ANY provider's response headers.
+ * Scans all headers and scores matches rather than hardcoding header names.
+ * This handles any provider variation without needing per-provider rules.
  */
 function parseRateLimitHeaders(headers) {
   if (!headers) return null;
 
-  // Normalise — headers may be a Headers object or plain object
-  const get = (key) => {
-    if (typeof headers.get === 'function') return headers.get(key);
-    return headers[key] || headers[key.toLowerCase()] || null;
+  // Collect all headers into a plain object
+  const all = {};
+  if (typeof headers.forEach === 'function') {
+    headers.forEach((value, key) => { all[key.toLowerCase()] = value; });
+  } else {
+    Object.keys(headers).forEach(k => { all[k.toLowerCase()] = headers[k]; });
+  }
+
+  // Log for debugging (only rate-relevant headers)
+  const relevant = Object.entries(all).filter(([k]) =>
+    k.includes('rate') || k.includes('limit') || k.includes('remaining') ||
+    k.includes('retry') || k.includes('reset') || k.includes('trial') ||
+    k.includes('quota') || k.includes('usage')
+  );
+  if (relevant.length > 0) {
+    console.log('[NeverDrop] Rate headers:', Object.fromEntries(relevant));
+  }
+
+  // ── Helper: find best matching header by keyword priority ─────────────────
+  const find = (...keywords) => {
+    // Try exact combos first (most specific to least specific)
+    for (const kw of keywords) {
+      const key = Object.keys(all).find(k => k === kw);
+      if (key && all[key] !== undefined) return all[key];
+    }
+    // Then partial match in priority order
+    for (const kw of keywords) {
+      const key = Object.keys(all).find(k => k.includes(kw));
+      if (key && all[key] !== undefined) return all[key];
+    }
+    return null;
   };
 
-  // ── Cohere trial headers ──────────────────────────────────────────────────
-  const cohereLimit     = get('x-trial-endpoint-call-limit') || get('x-endpoint-monthly-call-limit');
-  const cohereRemaining = get('x-trial-endpoint-call-remaining');
-  if (cohereLimit && cohereRemaining !== null) {
-    return {
-      limit:     parseInt(cohereLimit),
-      remaining: parseInt(cohereRemaining),
-      resetAt:   null, // Cohere resets monthly, no header for exact time
-      window:    'monthly',
-    };
-  }
+  // ── Find LIMIT: how many requests allowed in this window ──────────────────
+  // Priority: per-minute request limit > daily > generic limit
+  const limitRaw =
+    find('ratelimit-limit-req-minute', 'ratelimit-limit-requests', 'ratelimit-limit-req',
+         'trial-endpoint-call-limit', 'endpoint-monthly-call-limit',
+         'ratelimit-limit-rpm', 'ratelimit-limit') ||
+    find('x-limit-req', 'limit-req', 'req-limit');
 
-  // ── Anthropic ─────────────────────────────────────────────────────────────
-  const anthropicLimit     = get('anthropic-ratelimit-requests-limit');
-  const anthropicRemaining = get('anthropic-ratelimit-requests-remaining');
-  const anthropicReset     = get('anthropic-ratelimit-requests-reset');
-  if (anthropicLimit && anthropicRemaining !== null) {
-    return {
-      limit:     parseInt(anthropicLimit),
-      remaining: parseInt(anthropicRemaining),
-      resetAt:   anthropicReset ? new Date(anthropicReset).toISOString() : null,
-      window:    'minute',
-    };
-  }
+  // ── Find REMAINING: how many left ─────────────────────────────────────────
+  const remainingRaw =
+    find('ratelimit-remaining-req-minute', 'ratelimit-remaining-requests', 'ratelimit-remaining-req',
+         'trial-endpoint-call-remaining', 'endpoint-monthly-call-remaining',
+         'ratelimit-remaining-rpm', 'ratelimit-remaining') ||
+    find('x-remaining-req', 'remaining-req', 'req-remaining');
 
-  // ── OpenAI / Groq / Mistral / Cerebras (all use similar headers) ──────────
-  const limit     = get('x-ratelimit-limit-requests')     || get('x-ratelimit-limit');
-  const remaining = get('x-ratelimit-remaining-requests') || get('x-ratelimit-remaining');
-  const reset     = get('x-ratelimit-reset-requests')     || get('x-ratelimit-reset');
+  // ── Find RESET: when the window resets ────────────────────────────────────
+  const resetRaw =
+    find('ratelimit-reset-requests', 'ratelimit-reset-req-minute', 'ratelimit-reset-req',
+         'ratelimit-reset', 'retry-after', 'x-retry-after');
 
-  if (limit && remaining !== null) {
-    // reset can be "1m30s", "90s", epoch seconds, or ISO string
-    let resetAt = null;
-    if (reset) {
-      if (/^\d+$/.test(reset)) {
-        // epoch seconds (Mistral)
-        resetAt = new Date(parseInt(reset) * 1000).toISOString();
-      } else if (/^\d{4}-/.test(reset)) {
-        // ISO string
-        resetAt = new Date(reset).toISOString();
-      } else {
-        // "1m30s" or "90s" — calculate from now
-        const match = reset.match(/(?:(\d+)m)?(?:(\d+)s)?/);
-        if (match) {
-          const mins = parseInt(match[1] || 0);
-          const secs = parseInt(match[2] || 0);
-          resetAt = new Date(Date.now() + (mins * 60 + secs) * 1000).toISOString();
-        }
+  // Nothing useful found
+  if (limitRaw === null && remainingRaw === null) return null;
+
+  const limit     = limitRaw     != null ? parseInt(limitRaw)     : null;
+  const remaining = remainingRaw != null ? parseInt(remainingRaw) : null;
+
+  // ── Parse reset time into ISO string ─────────────────────────────────────
+  let resetAt = null;
+  if (resetRaw) {
+    const raw = String(resetRaw).trim();
+    if (/^\d{4}-/.test(raw)) {
+      resetAt = new Date(raw).toISOString();                       // ISO string
+    } else if (/^\d{10,}$/.test(raw)) {
+      resetAt = new Date(parseInt(raw) * 1000).toISOString();      // epoch seconds
+    } else if (/^\d+$/.test(raw)) {
+      resetAt = new Date(Date.now() + parseInt(raw) * 1000).toISOString(); // retry-after seconds
+    } else {
+      // "1m30s" or "90s" format
+      const m = raw.match(/(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?/);
+      if (m && (m[1] || m[2])) {
+        const ms = ((parseInt(m[1] || 0) * 60) + parseFloat(m[2] || 0)) * 1000;
+        resetAt = new Date(Date.now() + ms).toISOString();
       }
     }
-    return {
-      limit:     parseInt(limit),
-      remaining: parseInt(remaining),
-      resetAt,
-      window:    'minute',
-    };
   }
 
-  return null;
+  return { limit, remaining, resetAt };
 }
+
 
 async function chat({ provider, apiKey, messages }) {
   switch (provider.adapter) {
@@ -138,21 +155,6 @@ async function chatOpenAI({ provider, apiKey, messages }) {
     }),
   });
 
-  // Debug: log all rate limit headers received
-  const allHeaders = {};
-  res.headers.forEach((value, key) => {
-    if (key.toLowerCase().includes('rate') || key.toLowerCase().includes('limit') ||
-        key.toLowerCase().includes('remaining') || key.toLowerCase().includes('trial') ||
-        key.toLowerCase().includes('retry') || key.toLowerCase().includes('reset')) {
-      allHeaders[key] = value;
-    }
-  });
-  if (Object.keys(allHeaders).length > 0) {
-    console.log(`[NeverDrop] Rate limit headers from ${provider.base_url}:`, allHeaders);
-  } else {
-    console.log(`[NeverDrop] No rate limit headers from ${provider.base_url}`);
-  }
-
   const quotaInfo = parseRateLimitHeaders(res.headers);
 
   if (!res.ok) {
@@ -189,21 +191,6 @@ async function chatAnthropic({ provider, apiKey, messages }) {
       messages:   conversation,
     }),
   });
-
-  // Debug: log all rate limit headers received
-  const allHeaders = {};
-  res.headers.forEach((value, key) => {
-    if (key.toLowerCase().includes('rate') || key.toLowerCase().includes('limit') ||
-        key.toLowerCase().includes('remaining') || key.toLowerCase().includes('trial') ||
-        key.toLowerCase().includes('retry') || key.toLowerCase().includes('reset')) {
-      allHeaders[key] = value;
-    }
-  });
-  if (Object.keys(allHeaders).length > 0) {
-    console.log(`[NeverDrop] Rate limit headers from ${provider.base_url}:`, allHeaders);
-  } else {
-    console.log(`[NeverDrop] No rate limit headers from ${provider.base_url}`);
-  }
 
   const quotaInfo = parseRateLimitHeaders(res.headers);
 
