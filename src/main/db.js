@@ -223,7 +223,9 @@ const addMessage = (msg) => {
     is_port_marker:  msg.is_port_marker ? 1 : 0,
   });
   touchConversation(msg.conversation_id);
-  return { id, ...msg };
+  // Re-fetch so created_at (set by SQLite DEFAULT) is included
+  const saved = db.prepare('SELECT * FROM messages WHERE id = ?').get(id);
+  return saved || { id, ...msg };
 };
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
