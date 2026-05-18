@@ -1,143 +1,114 @@
-# NeverDrop
+# NeverDrop MCP
 
-> Multi-LLM desktop chat — your conversations never drop when a provider's quota runs out.
+> Multi-LLM desktop chat with provider failover, local SQLite history, OS-keychain key storage, and a full MCP (Model Context Protocol) host client.
 
-[![Latest Release](https://img.shields.io/github/v/release/duke-haderach/neverdrop)](https://github.com/duke-haderach/neverdrop/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Windows](https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white)](https://github.com/duke-haderach/neverdrop/releases/latest)
-[![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white)](https://github.com/duke-haderach/neverdrop/releases/latest)
-[![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](https://github.com/duke-haderach/neverdrop/releases/latest)
+[![Electron](https://img.shields.io/badge/Electron-29-blue)](https://electronjs.org)
+[![React](https://img.shields.io/badge/React-18-61dafb)](https://reactjs.org)
 
 ---
 
-## ⬇️ Download
+## Features
 
-**No Node.js or npm required — just download and run.**
-
-| Platform | Download |
-|----------|----------|
-| 🪟 Windows | [NeverDrop-Setup-x64.exe](https://github.com/duke-haderach/neverdrop/releases/latest) |
-| 🍎 macOS | [NeverDrop.dmg](https://github.com/duke-haderach/neverdrop/releases/latest) |
-| 🐧 Linux | [NeverDrop.AppImage](https://github.com/duke-haderach/neverdrop/releases/latest) |
-
----
-NeverDrop-Setup-1.0.0.exe  — Windows installer | NeverDrop-1.0.0.dmg  — Mac installer | NeverDrop-1.0.0.AppImage  — Linux
-
-## Windows Security Warning
-
-When installing on Windows you may see a SmartScreen warning 
-saying "Unknown Publisher". This is normal for open source apps 
-without an expensive code signing certificate.
-
-To install: click **More info** → **Run anyway**
-
-Your API keys are stored in Windows Credential Manager and never 
-leave your machine.
-
-## What is NeverDrop?
-
-Configure multiple LLM providers once. Chat normally. When one hits its quota or runs out of credits, NeverDrop detects it instantly and lets you **port your entire conversation** to another provider — the new model picks up exactly where the last one left off, with full context.
-
-No more losing a conversation mid-way because your free tier ran out.
+- **Provider-agnostic** — OpenAI, Anthropic, Gemini, Groq, DeepSeek, Mistral, Cohere, Cerebras, xAI, Ollama, LM Studio, any OpenAI-compatible endpoint
+- **Never lose context** — one-click conversation porting across providers when quota runs out
+- **MCP host** — connect any MCP server (stdio transport); ships with first-class support for `agent-history-mcp` for long-term memory across sessions
+- **Local-first** — all conversations in SQLite (WAL mode), API keys in OS keychain
+- **Streaming** — token-by-token streaming for all providers
+- **Rolling summary** — pre-computed conversation summaries so context porting never blocks on a failing provider
 
 ---
 
-## ✨ Features
-
-- **⇄ Seamless context porting** — switch providers mid-conversation without losing context. Choose from AI-generated summary, full history verbatim, or both
-- **🔑 Keys stay on your machine** — API keys are stored in your OS keychain (Windows Credential Manager / macOS Keychain / libsecret on Linux), never in plain text
-- **🆓 Free tier friendly** — works with providers that have genuinely free APIs (no credit card required)
-- **💳 Paid + free hybrid** — use ChatGPT or Gemini as your primary, automatically fall back to free providers when quota hits
-- **🖥️ Local models** — Ollama and LM Studio work out of the box, fully offline
-- **📋 Conversation history** — all chats stored locally in SQLite, nothing sent to any server except your chosen LLM
-- **🌐 Universal adapter** — supports any OpenAI-compatible API endpoint, plus native Anthropic and Gemini SDKs
-
----
-
-## 🆓 Free providers to get started
-
-These require no credit card — just sign up and get an API key:
-
-| Provider | Sign up | Recommended model | Quality |
-|----------|---------|-------------------|---------|
-| **Groq** | [console.groq.com](https://console.groq.com) | `llama-3.3-70b-versatile` | ⭐⭐⭐⭐⭐ |
-| **Mistral** | [console.mistral.ai](https://console.mistral.ai) | `mistral-small-latest` | ⭐⭐⭐⭐ |
-| **Cohere** | [dashboard.cohere.com](https://dashboard.cohere.com) | `command-r-plus-08-2024` | ⭐⭐⭐⭐ |
-| **Cerebras** | [cloud.cerebras.ai](https://cloud.cerebras.ai) | `llama-3.3-70b` | ⭐⭐⭐⭐ |
-| **DeepSeek** | [platform.deepseek.com](https://platform.deepseek.com) | `deepseek-chat` | ⭐⭐⭐⭐ |
-
-Groq's Llama 3.3 70B is comparable to GPT-4o-mini for most tasks and has a generous free tier.
-
----
-
-## 💳 Paid providers
-
-| Provider | Sign up | Notes |
-|----------|---------|-------|
-| OpenAI (ChatGPT) | [platform.openai.com](https://platform.openai.com) | Requires billing credits |
-| Google Gemini | [aistudio.google.com](https://aistudio.google.com) | Free tier region-restricted |
-| Anthropic (Claude) | [console.anthropic.com](https://console.anthropic.com) | Requires billing credits |
-| xAI (Grok) | [console.x.ai](https://console.x.ai) | Requires billing credits |
-
----
-
-## 🖥️ Local models (no API key, no internet)
-
-| App | Download | Notes |
-|-----|----------|-------|
-| Ollama | [ollama.com](https://ollama.com) | Base URL: `http://localhost:11434/v1` |
-| LM Studio | [lmstudio.ai](https://lmstudio.ai) | Base URL: `http://localhost:1234/v1` |
-
----
-
-## How context porting works
-
-When a provider's quota is exhausted (or you manually switch), NeverDrop offers three strategies:
-
-| Strategy | How it works | Best for |
-|----------|-------------|----------|
-| **Summary + Recent** *(recommended)* | AI generates a concise summary of the conversation, plus the last 20 messages verbatim | Most conversations |
-| **Summary only** | Compact AI-generated summary injected as context | Long conversations |
-| **Full history** | Every message injected verbatim | Short, precise technical conversations |
-
-The new provider receives this context silently as a system prompt and continues naturally — it won't announce that a switch happened unless you ask.
-
----
-
-## Build from source
-
-Requires [Node.js 20 LTS](https://nodejs.org/en/download).
+## Quick start
 
 ```bash
 git clone https://github.com/duke-haderach/neverdrop
 cd neverdrop
 npm install
-npx electron-rebuild -f -w better-sqlite3
-npm start
+npm run dev
 ```
 
-To build installers locally:
+## Build installers
 
 ```bash
-npm run dist:win    # Windows — NSIS installer + portable .exe
-npm run dist:mac    # macOS — .dmg
-npm run dist:linux  # Linux — .AppImage + .deb
+npm run dist:win    # Windows NSIS installer + portable
+npm run dist:mac    # macOS .dmg (x64 + arm64)
+npm run dist:linux  # AppImage + .deb
 ```
+
+---
+
+## MCP Memory (agent-history-mcp)
+
+Install once:
+
+```bash
+pip install git+https://github.com/monishkumarvr/agent-history-mcp.git
+```
+
+In the app: **MCP tab → Add → select "agent-history-mcp (pip)" preset → Connect → Activate**.
+
+Every message you type is debounce-searched against your past Claude Code and Codex CLI sessions. Relevant context is injected silently into the system prompt before the LLM call. The context block is shown in the UI before you send so you can dismiss it per-message.
+
+---
+
+## Context porting
+
+When your active provider's quota runs out, click **⇄ Port context** to continue on any other configured provider.
+
+Strategies:
+- **Summary + Recent 20** (recommended)
+- **Summary only** — minimal tokens
+- **Full verbatim** — entire history
 
 ---
 
 ## Architecture
 
-| Layer | Technology |
-|-------|------------|
+| Layer | Tech |
+|---|---|
 | Desktop shell | Electron 29 |
-| UI | React 18 + Vite |
-| Local storage | better-sqlite3 (WAL mode) |
+| UI | React 18 + Vite 5 |
+| Local storage | better-sqlite3 (WAL) |
 | Key storage | keytar (OS keychain) |
-| LLM adapters | OpenAI SDK, Anthropic SDK, Google Generative AI SDK |
+| LLM adapters | openai SDK · @anthropic-ai/sdk · @google/generative-ai |
+| MCP protocol | JSON-RPC 2.0 over stdio (spec 2024-11-05) |
+
+---
+
+## Project structure
+
+```
+neverdrop/
+├── electron/
+│   ├── main.js
+│   ├── preload.js
+│   ├── db/schema.js
+│   ├── ipc/chat.js
+│   ├── ipc/conversations.js
+│   ├── ipc/mcp.js
+│   ├── ipc/providers.js
+│   ├── mcp/host.js
+│   └── providers/index.js
+└── src/
+    ├── App.jsx
+    ├── main.jsx
+    ├── styles/globals.css
+    ├── lib/markdown.js
+    ├── hooks/useChat.js
+    ├── hooks/useConversations.js
+    ├── hooks/useMcp.js
+    └── components/
+        ├── chat/ChatView.jsx
+        ├── chat/ChatInput.jsx
+        ├── chat/MessageBubble.jsx
+        ├── mcp/McpPanel.jsx
+        ├── settings/ProviderPanel.jsx
+        └── sidebar/Sidebar.jsx
+```
 
 ---
 
 ## License
 
-MIT — free to use, modify and distribute.
+MIT

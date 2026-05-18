@@ -1,0 +1,64 @@
+:root {
+  --bg:        #131417;
+  --panel:     #1b1d22;
+  --panel-2:   #22252b;
+  --panel-3:   #2a2d35;
+  --text:      #eceef2;
+  --muted:     #9ba3af;
+  --faint:     #4b5260;
+  --border:    #2e3139;
+  --accent:    #0ea5a4;
+  --accent-h:  #0c8e8d;
+  --success:   #22c55e;
+  --error:     #f87171;
+  --warning:   #fbbf24;
+  --radius:    14px;
+  --radius-sm: 8px;
+  --shadow:    0 8px 32px rgba(0,0,0,.35);
+  --font:      'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  height: 100%;
+  font-family: var(--font);
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+#root { height: 100%; display: flex; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: none; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--panel-3); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--faint); }
+::selection { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+
+/* Markdown */
+.msg-content h1,.msg-content h2,.msg-content h3 { margin: 1rem 0 .5rem; font-weight: 700; }
+.msg-content p  { margin: .5rem 0; line-height: 1.65; }
+.msg-content ul,.msg-content ol { margin: .5rem 0; padding-left: 1.4rem; }
+.msg-content li { margin: .25rem 0; }
+.msg-content pre {
+  background: var(--panel-3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  overflow-x: auto; margin: .75rem 0;
+  font-family: var(--font-mono); font-size: 13px; line-height: 1.55;
+}
+.msg-content code {
+  font-family: var(--font-mono); font-size: 12.5px;
+  background: var(--panel-3); padding: 2px 5px; border-radius: 4px;
+}
+.msg-content pre code { background: none; padding: 0; }
+.msg-content blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--muted); margin: .5rem 0; }
+.msg-content a { color: var(--accent); text-decoration: underline; }
+.msg-content table { border-collapse: collapse; margin: .75rem 0; width: 100%; }
+.msg-content th,.msg-content td { border: 1px solid var(--border); padding: 6px 10px; }
+.msg-content th { background: var(--panel-3); font-weight: 700; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
