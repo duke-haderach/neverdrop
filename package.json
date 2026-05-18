@@ -2,7 +2,7 @@
   "name": "neverdrop",
   "version": "1.1.0",
   "description": "Multi-LLM desktop chat with provider failover, MCP host client, and local SQLite history",
-  "main": "dist-electron/main.js",
+  "main": "electron/main.js",
   "author": "duke-haderach",
   "license": "MIT",
   "scripts": {
